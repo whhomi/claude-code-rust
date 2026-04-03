@@ -14,7 +14,7 @@ jobs:
         os: [windows-latest]
         include:
           - os: windows-latest
-            target: x86_64-pc-windows-msvc
+            # Windows默认就是这个目标，无需指定
             artifact: claude_code_rs.exe
             asset_name: claude-code-rust-windows-x86_64.exe
 
@@ -23,11 +23,14 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       
       - name: 构建 Release
-        run: cargo build --release --target ${{ matrix.target }}
+        # 移除了无用的 --target，使用默认路径
+        run: cargo build --release
       
-      - name: 上传资源到发布
+      - name: 上传资源到 GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: target/${{ matrix.target }}/release/${{ matrix.artifact }}
-
- 
+          # 【核心修复】正确的Windows构建产物路径
+          files: target/release/${{ matrix.artifact }}
+        env:
+          # 必须添加GitHub令牌，否则无权限创建/上传Release
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
