@@ -7,30 +7,24 @@ on:
 
 jobs:
   build:
-    name: 构建 ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest]
-        include:
-          - os: windows-latest
-            # Windows默认就是这个目标，无需指定
-            artifact: claude_code_rs.exe
-            asset_name: claude-code-rust-windows-x86_64.exe
+    name: 构建 Windows
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       
       - name: 构建 Release
-        # 移除了无用的 --target，使用默认路径
         run: cargo build --release
-      
-      - name: 上传资源到 GitHub Release
+
+      # 👇 新增：查看编译出来的文件到底叫什么
+      - name: 查看生成的文件
+        run: dir target/release/*.exe
+
+      # 👇 上传（使用通配符 * 自动匹配，不管叫什么都能找到）
+      - name: 上传到 Release
         uses: softprops/action-gh-release@v1
         with:
-          # 【核心修复】正确的Windows构建产物路径
-          files: target/release/${{ matrix.artifact }}
+          files: target/release/*.exe  # 通配符，自动匹配
         env:
-          # 必须添加GitHub令牌，否则无权限创建/上传Release
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
